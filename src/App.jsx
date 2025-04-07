@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const cards = [
   {
@@ -20,12 +20,27 @@ const cards = [
     content: "This is the third card.",
     bg: "bg-green-400",
   },
+  {
+    id: 4,
+    title: "Card Your",
+    content: "This is the third card.",
+    bg: "bg-yellow-400",
+  },{
+    id: 5,
+    title: "Card Five",
+    content: "This is the third card.",
+    bg: "bg-purple-400",
+  },{
+    id: 6,
+    title: "Card Six",
+    content: "This is the third card.",
+    bg: "bg-indigo-400",
+  },
 ];
 
 export default function App() {
   const [index, setIndex] = useState(0);
-  const [scrolling, setScrolling] = useState(false); // to debounce rapid scrolls
-  const currentCard = cards[index];
+  const [scrolling, setScrolling] = useState(false);
 
   const handleScroll = useCallback(
     (e) => {
@@ -33,14 +48,12 @@ export default function App() {
 
       setScrolling(true);
       if (e.deltaY > 0) {
-        // Scroll down
-        setIndex((prev) => (prev + 1) % cards.length);
+        setIndex((prev) => Math.min(prev + 1, cards.length - 1));
       } else {
-        // Scroll up
-        setIndex((prev) => (prev - 1 + cards.length) % cards.length);
+        setIndex((prev) => Math.max(prev - 1, 0));
       }
 
-      setTimeout(() => setScrolling(false), 600); // debounce duration matches animation
+      setTimeout(() => setScrolling(false), 600);
     },
     [scrolling]
   );
@@ -48,22 +61,33 @@ export default function App() {
   return (
     <div
       onWheel={handleScroll}
-      className={`w-full h-screen flex items-center justify-center transition-colors duration-500 ${currentCard.bg}`}
+      className={`w-full h-screen flex items-center justify-center transition-colors duration-500 ${cards[index].bg}`}
     >
-      <div className="relative w-full max-w-md px-4">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentCard.id}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.5 }}
-            className="rounded-2xl bg-white border border-gray-200 shadow-2xl p-8 text-center"
-          >
-            <h2 className="text-3xl font-semibold mb-4">{currentCard.title}</h2>
-            <p className="text-gray-700 text-base">{currentCard.content}</p>
-          </motion.div>
-        </AnimatePresence>
+      <div className="relative w-full max-w-md h-[400px] px-4 perspective">
+        {cards.map((card, i) => {
+          const isActive = i === index;
+          const isBehind = i < index;
+
+          return (
+            <motion.div
+              key={card.id}
+              layout
+              initial={false}
+              animate={{
+                y: isActive ? 0 : isBehind ? (index - i) * -20 : 100,
+                scale: isActive ? 1 : 0.9,
+                rotateX: isBehind ? 20 : 0,
+                zIndex: isActive ? 10 : cards.length - i,
+                opacity: isBehind ? 0.7 : 1,
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="absolute top-0 left-0 w-full rounded-2xl bg-white border border-gray-200 shadow-2xl p-8 text-center"
+            >
+              <h2 className="text-3xl font-semibold mb-4">{card.title}</h2>
+              <p className="text-gray-700 text-base">{card.content}</p>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
