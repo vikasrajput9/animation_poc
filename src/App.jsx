@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const cards = [
   {
@@ -14,9 +13,7 @@ const cards = [
     title: "Card Two",
     content: "This is the second card.",
     bg: "bg-blue-400",
-    
   },
-  
   {
     id: 3,
     title: "Card Three",
@@ -27,13 +24,30 @@ const cards = [
 
 export default function App() {
   const [index, setIndex] = useState(0);
+  const [scrolling, setScrolling] = useState(false); // to debounce rapid scrolls
   const currentCard = cards[index];
 
-  const handleNext = () => setIndex((prev) => (prev + 1) % cards.length);
-  const handlePrev = () => setIndex((prev) => (prev - 1 + cards.length) % cards.length);
+  const handleScroll = useCallback(
+    (e) => {
+      if (scrolling) return;
+
+      setScrolling(true);
+      if (e.deltaY > 0) {
+        // Scroll down
+        setIndex((prev) => (prev + 1) % cards.length);
+      } else {
+        // Scroll up
+        setIndex((prev) => (prev - 1 + cards.length) % cards.length);
+      }
+
+      setTimeout(() => setScrolling(false), 600); // debounce duration matches animation
+    },
+    [scrolling]
+  );
 
   return (
     <div
+      onWheel={handleScroll}
       className={`w-full h-screen flex items-center justify-center transition-colors duration-500 ${currentCard.bg}`}
     >
       <div className="relative w-full max-w-md px-4">
@@ -50,22 +64,8 @@ export default function App() {
             <p className="text-gray-700 text-base">{currentCard.content}</p>
           </motion.div>
         </AnimatePresence>
-
-        <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex gap-4">
-          <button
-            onClick={handlePrev}
-            className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
-          >
-            <ArrowLeft />
-          </button>
-          <button
-            onClick={handleNext}
-            className="bg-white p-2 rounded-full shadow hover:bg-gray-100 transition"
-          >
-            <ArrowRight />
-          </button>
-        </div>
       </div>
     </div>
   );
 }
+
